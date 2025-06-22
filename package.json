@@ -1,0 +1,18 @@
+{
+    "name": "solana-balance-monitor",
+    "version": "1.0.0",
+    "description": "Solana 余额监控系统",
+    "private": true,
+    "scripts": {
+        "dev": "pnpm run --parallel dev",
+        "dev:backend": "cd backend && pnpm dev",
+        "dev:frontend": "cd frontend && pnpm dev",
+        "build": "pnpm run --recursive build",
+        "install:all": "pnpm install",
+        "start": "pnpm run --parallel start"
+    },
+    "packageManager": "pnpm@8.15.0",
+    "devDependencies": {
+        "@types/node": "^20.10.0"
+    }
+}
