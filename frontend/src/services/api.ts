@@ -42,12 +42,10 @@ export const api = {
         return response.data;
     },
 
-    async getBalanceHistory(wallet: string, startDate?: string, endDate?: string, interval = 'hourly'): Promise<HistoryData[]> {
+    async getBalanceHistory(wallet: string, timeRange = '1h'): Promise<HistoryData[]> {
         const response = await axios.post(`${API_BASE}/balance/history`, {
             wallet,
-            startDate,
-            endDate,
-            interval
+            timeRange
         });
         return response.data;
     },

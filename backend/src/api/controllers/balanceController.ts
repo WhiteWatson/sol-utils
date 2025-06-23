@@ -52,14 +52,53 @@ export async function getLatestBalance(req: Request, res: Response, next: NextFu
 
 export async function getBalanceHistory(req: Request, res: Response, next: NextFunction) {
     try {
-        const { wallet, startDate, endDate, interval = 'hourly' } = req.body;
+        const { wallet, timeRange = '1h' } = req.body;
         if (!wallet) {
             return res.status(400).json({ message: 'wallet 必填' });
         }
-        const start = startDate ? new Date(startDate) : dayjs().subtract(1, 'day').toDate();
-        const end = endDate ? new Date(endDate) : new Date();
 
-        const groupFormat = interval === 'daily' ? '%Y-%m-%d' : '%Y-%m-%dT%H:00:00Z';
+        // 根据时间范围计算开始时间
+        const now = new Date();
+        let start: Date;
+        let groupFormat: string;
+
+        switch (timeRange) {
+            case '1m':
+                start = dayjs().subtract(1, 'minute').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+                break;
+            case '5m':
+                start = dayjs().subtract(5, 'minute').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+                break;
+            case '15m':
+                start = dayjs().subtract(15, 'minute').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+                break;
+            case '30m':
+                start = dayjs().subtract(30, 'minute').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+                break;
+            case '1h':
+                start = dayjs().subtract(1, 'hour').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+                break;
+            case '6h':
+                start = dayjs().subtract(6, 'hour').toDate();
+                groupFormat = '%Y-%m-%dT%H:00:00';
+                break;
+            case '12h':
+                start = dayjs().subtract(12, 'hour').toDate();
+                groupFormat = '%Y-%m-%dT%H:00:00';
+                break;
+            case '1d':
+                start = dayjs().subtract(1, 'day').toDate();
+                groupFormat = '%Y-%m-%dT%H:00:00';
+                break;
+            default:
+                start = dayjs().subtract(1, 'hour').toDate();
+                groupFormat = '%Y-%m-%dT%H:%M:%S';
+        }
 
         const data = await BalanceRecord.aggregate([
             {
@@ -67,7 +106,7 @@ export async function getBalanceHistory(req: Request, res: Response, next: NextF
                     wallet,
                     timestamp: {
                         $gte: start,
-                        $lte: end
+                        $lte: now
                     }
                 }
             },
@@ -86,9 +125,9 @@ export async function getBalanceHistory(req: Request, res: Response, next: NextF
                 $project: {
                     timestamp: '$_id',
                     _id: 0,
-                    sol: 1,
-                    usdc: 1,
-                    usdt: 1
+                    sol: { $round: ['$sol', 6] },
+                    usdc: { $round: ['$usdc', 2] },
+                    usdt: { $round: ['$usdt', 2] }
                 }
             }
         ]);
