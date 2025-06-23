@@ -27,7 +27,7 @@ export function createServer(): Express {
     });
 
     // API 路由
-    app.use('/balance', balanceRouter);
+    app.use('/api/balance', balanceRouter);
 
     // Swagger 文档
     const swaggerSpec = swaggerJSDoc({
