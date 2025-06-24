@@ -1,0 +1,158 @@
+@import '../../styles/variables.less';
+@import '../../styles/mixins.less';
+
+.dashboard {
+  .fade-in();
+}
+
+.header {
+  margin-bottom: @spacing-xl;
+  text-align: center;
+  
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: @spacing-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  p {
+    font-size: @font-size-base;
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+  }
+}
+
+.statsRow {
+  margin-bottom: @spacing-xl;
+}
+
+.statCard {
+  .card-shadow();
+  text-align: center;
+  
+  :global(.ant-statistic-title) {
+    font-size: @font-size-sm;
+    color: rgba(0, 0, 0, 0.45);
+  }
+  
+  :global(.ant-statistic-content) {
+    font-size: 24px;
+    font-weight: 600;
+  }
+}
+
+.changePositive {
+  color: @success-color;
+  font-size: @font-size-sm;
+  margin-left: @spacing-xs;
+}
+
+.chartsRow {
+  margin-bottom: @spacing-xl;
+}
+
+.chartCard {
+  .card-shadow();
+  height: 400px;
+  
+  :global(.ant-card-body) {
+    height: calc(100% - 57px);
+    padding: @spacing-lg;
+  }
+}
+
+.actionsRow {
+  margin-bottom: @spacing-xl;
+}
+
+.statusCard,
+.activityCard,
+.quickActionsCard {
+  .card-shadow();
+  height: 200px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: @spacing-md;
+  
+  span {
+    font-size: @font-size-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  :global(.ant-progress) {
+    flex: 1;
+    margin-left: @spacing-md;
+  }
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: @spacing-sm;
+  padding: @spacing-xs 0;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.activityTime {
+  font-size: @font-size-sm;
+  color: rgba(0, 0, 0, 0.45);
+  margin-right: @spacing-sm;
+  min-width: 60px;
+}
+
+.activityText {
+  font-size: @font-size-sm;
+  color: var(--text-color, @text-color);
+}
+
+.actionButtons {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-sm;
+  height: 100%;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: @spacing-sm @spacing-md;
+  border: 1px solid var(--border-color, @border-color);
+  background: #fff;
+  border-radius: @border-radius-base;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: @font-size-sm;
+  
+  &:hover {
+    border-color: var(--primary-color, @primary-color);
+    color: var(--primary-color, @primary-color);
+  }
+}
+
+// 响应式设计
+@media (max-width: @screen-lg) {
+  .chartCard {
+    height: 300px;
+  }
+}
+
+@media (max-width: @screen-md) {
+  .header {
+    h1 {
+      font-size: 24px;
+    }
+  }
+  
+  .statCard {
+    :global(.ant-statistic-content) {
+      font-size: 20px;
+    }
+  }
+} 

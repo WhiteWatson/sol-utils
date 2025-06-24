@@ -1,0 +1,93 @@
+@import '../../../styles/variables.less';
+@import '../../../styles/mixins.less';
+
+.balanceOverview {
+  .fade-in();
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: @spacing-xl;
+  flex-wrap: wrap;
+  gap: @spacing-md;
+}
+
+.title {
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: @spacing-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  p {
+    font-size: @font-size-base;
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+  }
+}
+
+.balanceCards {
+  margin-bottom: @spacing-xl;
+}
+
+.totalStats {
+  margin-bottom: @spacing-xl;
+}
+
+.statCard {
+  .card-shadow();
+  text-align: center;
+  
+  :global(.ant-statistic-title) {
+    font-size: @font-size-sm;
+    color: rgba(0, 0, 0, 0.45);
+  }
+  
+  :global(.ant-statistic-content) {
+    font-size: 24px;
+    font-weight: 600;
+  }
+}
+
+.chartsRow {
+  margin-bottom: @spacing-xl;
+}
+
+.chartCard {
+  .card-shadow();
+  height: 400px;
+  
+  :global(.ant-card-body) {
+    height: calc(100% - 57px);
+    padding: @spacing-lg;
+  }
+}
+
+// 响应式设计
+@media (max-width: @screen-lg) {
+  .chartCard {
+    height: 300px;
+  }
+}
+
+@media (max-width: @screen-md) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .title {
+    h1 {
+      font-size: 24px;
+    }
+  }
+  
+  .statCard {
+    :global(.ant-statistic-content) {
+      font-size: 20px;
+    }
+  }
+} 

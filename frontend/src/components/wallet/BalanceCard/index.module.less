@@ -1,0 +1,111 @@
+@import '../../../styles/variables.less';
+@import '../../../styles/mixins.less';
+
+.balanceCard {
+  .card-shadow();
+  height: 160px;
+  
+  :global(.ant-card-body) {
+    padding: @spacing-lg;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: @spacing-md;
+}
+
+.title {
+  font-size: @font-size-lg;
+  font-weight: 600;
+  color: var(--text-color, @text-color);
+}
+
+.colorIndicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.balance {
+  display: flex;
+  align-items: baseline;
+  gap: @spacing-xs;
+  margin-bottom: @spacing-sm;
+}
+
+.amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color, @text-color);
+}
+
+.unit {
+  font-size: @font-size-base;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.value {
+  font-size: @font-size-lg;
+  font-weight: 600;
+  color: var(--text-color, @text-color);
+  margin-bottom: @spacing-sm;
+}
+
+.change {
+  display: flex;
+  align-items: center;
+  gap: @spacing-xs;
+}
+
+.changeValue {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: @font-size-sm;
+  font-weight: 500;
+  
+  &.positive {
+    color: @success-color;
+  }
+  
+  &.negative {
+    color: @error-color;
+  }
+}
+
+.changeLabel {
+  font-size: @font-size-sm;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+// 响应式设计
+@media (max-width: @screen-md) {
+  .balanceCard {
+    height: 140px;
+    
+    :global(.ant-card-body) {
+      padding: @spacing-md;
+    }
+  }
+  
+  .amount {
+    font-size: 20px;
+  }
+  
+  .value {
+    font-size: @font-size-base;
+  }
+} 

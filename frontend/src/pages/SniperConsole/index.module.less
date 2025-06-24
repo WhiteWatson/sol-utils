@@ -1,0 +1,90 @@
+@import '../../styles/variables.less';
+@import '../../styles/mixins.less';
+
+.sniperConsole {
+  .fade-in();
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: @spacing-xl;
+  flex-wrap: wrap;
+  gap: @spacing-md;
+}
+
+.title {
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: @spacing-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  p {
+    font-size: @font-size-base;
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+  }
+}
+
+.controlPanel {
+  margin-bottom: @spacing-xl;
+}
+
+.controlCard {
+  .card-shadow();
+  height: 100%;
+}
+
+.settingItem {
+  display: flex;
+  flex-direction: column;
+  gap: @spacing-xs;
+  margin-bottom: @spacing-md;
+  
+  span {
+    font-size: @font-size-sm;
+    color: var(--text-color, @text-color);
+    font-weight: 500;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.statusItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: @spacing-md;
+  
+  span:first-child {
+    font-size: @font-size-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.dataCard {
+  .card-shadow();
+}
+
+// 响应式设计
+@media (max-width: @screen-md) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .title {
+    h1 {
+      font-size: 24px;
+    }
+  }
+} 

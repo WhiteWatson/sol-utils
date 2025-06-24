@@ -1,0 +1,49 @@
+@import '../../../styles/variables.less';
+@import '../../../styles/mixins.less';
+
+.sider {
+  background: #fff;
+  border-right: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.menu {
+  border-right: none;
+  background: transparent;
+  
+  :global(.ant-menu-item) {
+    color: rgba(0, 0, 0, 0.85);
+    
+    &:hover {
+      color: @primary-color;
+      background: rgba(24, 144, 255, 0.1);
+    }
+    
+    &.ant-menu-item-selected {
+      color: @primary-color;
+      background: rgba(24, 144, 255, 0.1);
+      
+      &::after {
+        border-right-color: @primary-color;
+      }
+    }
+  }
+  
+  :global(.ant-menu-submenu) {
+    color: rgba(0, 0, 0, 0.85);
+    
+    &:hover {
+      color: @primary-color;
+    }
+    
+    .ant-menu-submenu-title {
+      &:hover {
+        background: rgba(24, 144, 255, 0.1);
+      }
+    }
+  }
+  
+  :global(.ant-menu-submenu-selected) {
+    color: @primary-color;
+  }
+} 

@@ -1,0 +1,52 @@
+@import '../../../styles/variables.less';
+@import '../../../styles/mixins.less';
+
+.alertSettings {
+  .fade-in();
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: @spacing-xl;
+  flex-wrap: wrap;
+  gap: @spacing-md;
+}
+
+.title {
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: @spacing-sm;
+    color: var(--text-color, @text-color);
+  }
+  
+  p {
+    font-size: @font-size-base;
+    color: rgba(0, 0, 0, 0.45);
+    margin: 0;
+  }
+}
+
+.tableCard {
+  .card-shadow();
+}
+
+.form {
+  margin-top: @spacing-md;
+}
+
+// 响应式设计
+@media (max-width: @screen-md) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .title {
+    h1 {
+      font-size: 24px;
+    }
+  }
+} 
