@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Statistic, Progress, Spin } from "antd";
+import { Row, Col, Card, Statistic, Spin, Alert } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import { useWallet } from "../../contexts/WalletContext";
 import BalanceChart from "../../components/wallet/BalanceChart";
@@ -15,6 +15,7 @@ import styles from "./index.module.less";
 const DashboardPage: React.FC = () => {
   const { state } = useWallet();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [aggregatedData, setAggregatedData] = useState<AggregatedData | null>(
     null
   );
@@ -25,6 +26,7 @@ const DashboardPage: React.FC = () => {
     if (state.wallets.length > 0) {
       const fetchData = async () => {
         setLoading(true);
+        setError(null);
         try {
           // Note: The backend only supports one wallet, we use the first one for now
           const currentWallet = state.wallets[0].address;
@@ -38,6 +40,11 @@ const DashboardPage: React.FC = () => {
           setLatestBalance(latestData);
         } catch (error) {
           console.error("Failed to fetch dashboard data:", error);
+          setError("获取仪表盘数据失败，请稍后重试");
+          // 设置默认值以避免错误
+          setAggregatedData(null);
+          setHistoryData(null);
+          setLatestBalance(null);
         } finally {
           setLoading(false);
         }
@@ -47,16 +54,42 @@ const DashboardPage: React.FC = () => {
     }
   }, [state.wallets]);
 
-  // 模拟数据
-  const mockData = {
-    totalWallets: 3,
-    totalValue: 125000,
-    dailyChange: 2.5,
-    weeklyChange: -1.2,
-    monthlyChange: 8.7,
+  // 安全地获取数据，提供默认值
+  const getWeeklyChange = () => {
+    if (!aggregatedData?.price?.changePercent) return 0;
+    const changePercent = parseFloat(aggregatedData.price.changePercent);
+    return isNaN(changePercent) ? 0 : changePercent;
   };
 
-  const weeklyChange = aggregatedData?.price.changePercent ?? 0;
+  const getTotalValue = () => {
+    return aggregatedData?.balance?.max ?? 0;
+  };
+
+  const getPriceChangePercent = () => {
+    if (!aggregatedData?.price?.changePercent) return 0;
+    const changePercent = parseFloat(aggregatedData.price.changePercent);
+    return isNaN(changePercent) ? 0 : changePercent;
+  };
+
+  const weeklyChange = getWeeklyChange();
+
+  // 如果没有连接钱包，显示提示
+  if (state.wallets.length === 0) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.header}>
+          <h1>仪表盘</h1>
+          <p>Solana 钱包监控与分析系统</p>
+        </div>
+        <Alert
+          message="未连接钱包"
+          description="请先连接您的钱包以查看仪表盘数据"
+          type="info"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.dashboard}>
@@ -65,15 +98,26 @@ const DashboardPage: React.FC = () => {
         <p>Solana 钱包监控与分析系统</p>
       </div>
 
+      {error && (
+        <Alert
+          message="数据获取失败"
+          description={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 24 }}
+        />
+      )}
+
       <Spin spinning={loading}>
         {/* 统计卡片 */}
-        <Row gutter={[16, 16]} className={styles.statsRow}>
+        <Row gutter={[24, 24]} className={styles.statsRow}>
           <Col xs={24} sm={12} lg={6}>
             <Card className={styles.statCard}>
               <Statistic
                 title="总钱包数"
                 value={state.wallets.length}
                 suffix="个"
+                valueStyle={{ color: "#1890ff" }}
               />
             </Card>
           </Col>
@@ -81,13 +125,13 @@ const DashboardPage: React.FC = () => {
             <Card className={styles.statCard}>
               <Statistic
                 title="总资产价值"
-                value={aggregatedData?.balance.max ?? 0}
+                value={getTotalValue()}
                 precision={2}
                 prefix="$"
+                valueStyle={{ color: "#52c41a" }}
                 suffix={
                   <span className={styles.changePositive}>
-                    <ArrowUpOutlined /> +
-                    {aggregatedData?.price.changePercent ?? 0}%
+                    <ArrowUpOutlined /> +{getPriceChangePercent()}%
                   </span>
                 }
               />
@@ -128,64 +172,31 @@ const DashboardPage: React.FC = () => {
         </Row>
 
         {/* 图表区域 */}
-        <Row gutter={[16, 16]} className={styles.chartsRow}>
+        <Row gutter={[24, 24]} className={styles.chartsRow}>
           <Col xs={24} lg={16}>
-            <Card title="余额变化趋势" className={styles.chartCard}>
-              <BalanceChart historyData={historyData} />
+            <Card
+              title="余额变化趋势"
+              className={styles.chartCard}
+              bodyStyle={{ padding: 0, height: "100%" }}
+            >
+              <div style={{ height: "400px", padding: "20px" }}>
+                <BalanceChart historyData={historyData} />
+              </div>
             </Card>
           </Col>
           <Col xs={24} lg={8}>
-            <Card title="资产分布" className={styles.chartCard}>
-              <AssetPieChart balanceData={latestBalance} />
+            <Card
+              title="资产分布"
+              className={styles.chartCard}
+              bodyStyle={{ padding: 0, height: "100%" }}
+            >
+              <div style={{ height: "400px", padding: "20px" }}>
+                <AssetPieChart balanceData={latestBalance} />
+              </div>
             </Card>
           </Col>
         </Row>
       </Spin>
-
-      {/* 快速操作 */}
-      <Row gutter={[16, 16]} className={styles.actionsRow}>
-        <Col xs={24} md={8}>
-          <Card title="系统状态" className={styles.statusCard}>
-            <div className={styles.statusItem}>
-              <span>API 连接</span>
-              <Progress percent={95} size="small" status="active" />
-            </div>
-            <div className={styles.statusItem}>
-              <span>数据同步</span>
-              <Progress percent={88} size="small" />
-            </div>
-            <div className={styles.statusItem}>
-              <span>告警系统</span>
-              <Progress percent={100} size="small" status="success" />
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card title="最近活动" className={styles.activityCard}>
-            <div className={styles.activityItem}>
-              <span className={styles.activityTime}>2分钟前</span>
-              <span className={styles.activityText}>钱包余额更新</span>
-            </div>
-            <div className={styles.activityItem}>
-              <span className={styles.activityTime}>5分钟前</span>
-              <span className={styles.activityText}>新钱包连接</span>
-            </div>
-            <div className={styles.activityItem}>
-              <span className={styles.activityTime}>10分钟前</span>
-              <span className={styles.activityText}>价格告警触发</span>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card title="快速操作" className={styles.quickActionsCard}>
-            <div className={styles.actionButtons}>
-              <button className={styles.actionButton}>添加钱包</button>
-              <button className={styles.actionButton}>查看交易</button>
-              <button className={styles.actionButton}>设置告警</button>
-            </div>
-          </Card>
-        </Col>
-      </Row>
     </div>
   );
 };

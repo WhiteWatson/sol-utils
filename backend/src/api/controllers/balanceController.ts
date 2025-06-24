@@ -152,7 +152,12 @@ export async function getAggregatedBalance(req: Request, res: Response, next: Ne
             PriceHistory.find({ timestamp: { $gte: from } }).sort({ timestamp: 1 })
         ]);
 
-        if (balanceData.length === 0) return res.json({});
+        if (balanceData.length === 0) {
+            return res.json({
+                balance: { min: 0, max: 0, avg: 0, trend: 'stable' as const },
+                price: { current: 0, change: 0, changePercent: '0' }
+            });
+        }
 
         const sols = balanceData.map((d: any) => d.sol);
         const min = Math.min(...sols);
@@ -162,7 +167,30 @@ export async function getAggregatedBalance(req: Request, res: Response, next: Ne
         if (sols[sols.length - 1] > sols[0] * 1.02) trend = 'up';
         else if (sols[sols.length - 1] < sols[0] * 0.98) trend = 'down';
 
-        res.json({ min, max, avg, trend });
+        // 计算价格变化
+        let currentPrice = 0;
+        let priceChange = 0;
+        let changePercent = '0';
+
+        if (priceData.length > 0) {
+            const latestPrice = priceData[priceData.length - 1];
+            const earliestPrice = priceData[0];
+
+            if (latestPrice && earliestPrice) {
+                currentPrice = latestPrice.sol || 0;
+                priceChange = (latestPrice.sol || 0) - (earliestPrice.sol || 0);
+
+                if (earliestPrice.sol && earliestPrice.sol > 0) {
+                    const percentChange = (priceChange / earliestPrice.sol) * 100;
+                    changePercent = percentChange.toFixed(2);
+                }
+            }
+        }
+
+        res.json({
+            balance: { min, max, avg, trend },
+            price: { current: currentPrice, change: priceChange, changePercent }
+        });
     } catch (error) {
         next(error);
     }

@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from 'path';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        nodePolyfills({
+            // Whether to polyfill specific globals.
+            globals: {
+                Buffer: true,
+                global: true,
+                process: true,
+            },
+            // Whether to polyfill `global`
+            protocolImports: true,
+        }),
+    ],
     server: {
         port: 5173,
         proxy: {
@@ -26,5 +39,12 @@ export default defineConfig({
         alias: {
             '@': path.resolve(__dirname, 'src'),
         },
-    }
+    },
+    define: {
+        global: 'globalThis',
+        'process.env': {},
+    },
+    optimizeDeps: {
+        include: ['buffer'],
+    },
 });

@@ -19,6 +19,10 @@ import {
   StorageService,
   StoredWalletConnection,
 } from "../services/storageService";
+import {
+  solanaService,
+  WalletBalance as SolanaWalletBalance,
+} from "../services/solanaService";
 
 // 余额数据接口
 export interface BalanceData {
@@ -29,6 +33,15 @@ export interface BalanceData {
   usdcPrice: number;
   usdtPrice: number;
   lastUpdated: string;
+  totalUsdValue: number;
+  tokenBalances: Array<{
+    symbol: string;
+    name: string;
+    balance: number;
+    price: number;
+    usdValue: number;
+    color: string;
+  }>;
 }
 
 // 告警设置接口
@@ -60,6 +73,7 @@ export interface WalletState {
   error: string | null;
   connecting: boolean;
   autoConnecting: boolean;
+  balanceLoading: boolean; // 新增：余额加载状态
 }
 
 // 初始状态
@@ -72,6 +86,7 @@ const initialState: WalletState = {
   error: null,
   connecting: false,
   autoConnecting: false,
+  balanceLoading: false,
 };
 
 // Action类型
@@ -79,6 +94,7 @@ export type WalletAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_CONNECTING"; payload: boolean }
   | { type: "SET_AUTO_CONNECTING"; payload: boolean }
+  | { type: "SET_BALANCE_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
   | { type: "ADD_WALLET"; payload: Wallet }
   | { type: "REMOVE_WALLET"; payload: string }
@@ -110,6 +126,8 @@ const walletReducer = (
       return { ...state, connecting: action.payload };
     case "SET_AUTO_CONNECTING":
       return { ...state, autoConnecting: action.payload };
+    case "SET_BALANCE_LOADING":
+      return { ...state, balanceLoading: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload };
     case "ADD_WALLET":
@@ -188,6 +206,8 @@ interface WalletContextType {
   disconnectWeb3Wallet: (walletType: WalletType) => Promise<void>;
   refreshAvailableWallets: () => void;
   updateBalance: (wallet: string, balance: BalanceData) => void;
+  fetchWalletBalance: (walletAddress: string) => Promise<void>;
+  refreshAllBalances: () => Promise<void>;
   addAlert: (alert: Omit<AlertSetting, "id">) => void;
   updateAlert: (alert: AlertSetting) => void;
   removeAlert: (id: string) => void;
@@ -211,6 +231,72 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const refreshAvailableWallets = () => {
     const availableWallets = getAvailableWallets();
     dispatch({ type: "SET_AVAILABLE_WALLETS", payload: availableWallets });
+  };
+
+  // 获取钱包余额
+  const fetchWalletBalance = async (walletAddress: string) => {
+    try {
+      dispatch({ type: "SET_BALANCE_LOADING", payload: true });
+
+      const solanaBalance = await solanaService.getWalletBalance(walletAddress);
+
+      // 转换为应用内的余额格式
+      const balanceData: BalanceData = {
+        sol: solanaBalance.solBalance,
+        usdc:
+          solanaBalance.tokenBalances.find((t) => t.symbol === "USDC")
+            ?.balance || 0,
+        usdt:
+          solanaBalance.tokenBalances.find((t) => t.symbol === "USDT")
+            ?.balance || 0,
+        solPrice:
+          solanaBalance.tokenBalances.find((t) => t.symbol === "SOL")?.price ||
+          0,
+        usdcPrice:
+          solanaBalance.tokenBalances.find((t) => t.symbol === "USDC")?.price ||
+          0,
+        usdtPrice:
+          solanaBalance.tokenBalances.find((t) => t.symbol === "USDT")?.price ||
+          0,
+        lastUpdated: solanaBalance.lastUpdated,
+        totalUsdValue: solanaBalance.totalUsdValue,
+        tokenBalances: solanaBalance.tokenBalances.map((token) => ({
+          symbol: token.symbol,
+          name: token.name,
+          balance: token.balance,
+          price: token.price || 0,
+          usdValue: token.usdValue || 0,
+          color: token.color,
+        })),
+      };
+
+      dispatch({
+        type: "UPDATE_BALANCE",
+        payload: { wallet: walletAddress, balance: balanceData },
+      });
+    } catch (error) {
+      console.error("获取钱包余额失败:", error);
+      dispatch({ type: "SET_ERROR", payload: "获取余额失败" });
+    } finally {
+      dispatch({ type: "SET_BALANCE_LOADING", payload: false });
+    }
+  };
+
+  // 刷新所有钱包余额
+  const refreshAllBalances = async () => {
+    try {
+      dispatch({ type: "SET_BALANCE_LOADING", payload: true });
+
+      const balancePromises = state.wallets.map((wallet) =>
+        fetchWalletBalance(wallet.address)
+      );
+
+      await Promise.allSettled(balancePromises);
+    } catch (error) {
+      console.error("刷新所有余额失败:", error);
+    } finally {
+      dispatch({ type: "SET_BALANCE_LOADING", payload: false });
+    }
   };
 
   // 连接Web3钱包
@@ -239,6 +325,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       };
       StorageService.addWalletConnection(connection);
 
+      // 获取钱包余额
+      await fetchWalletBalance(walletInfo.address!);
+
       // 设置钱包变化监听器
       const cleanup = listenToWalletChanges(
         walletType,
@@ -248,6 +337,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
             type: "UPDATE_WALLET_INFO",
             payload: { address, walletInfo },
           });
+          // 重新获取余额
+          fetchWalletBalance(address);
         },
         () => {
           // 钱包断开连接
@@ -354,6 +445,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
 
               dispatch({ type: "ADD_WALLET", payload: wallet });
               console.log(`成功恢复 ${connection.name} 连接`);
+
+              // 获取钱包余额
+              await fetchWalletBalance(currentAddress);
             } else {
               // 地址不匹配，移除过期的连接信息
               StorageService.removeWalletConnection(walletType);
@@ -412,12 +506,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const getTotalValue = (wallet: string): number => {
     const balance = state.balances[wallet];
     if (!balance) return 0;
-
-    return (
-      balance.sol * balance.solPrice +
-      balance.usdc * balance.usdcPrice +
-      balance.usdt * balance.usdtPrice
-    );
+    return balance.totalUsdValue;
   };
 
   // 初始化时刷新可用钱包列表并尝试自动恢复连接
@@ -440,6 +529,8 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     disconnectWeb3Wallet,
     refreshAvailableWallets,
     updateBalance,
+    fetchWalletBalance,
+    refreshAllBalances,
     addAlert,
     updateAlert,
     removeAlert,

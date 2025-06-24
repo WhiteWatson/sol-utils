@@ -37,6 +37,7 @@ export const routes: RouteItem[] = [
       {
         path: "/",
         redirect: "/dashboard",
+        hidden: true,
       },
       {
         path: "/dashboard",
