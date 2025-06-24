@@ -34,9 +34,54 @@ export interface AggregatedData {
     };
 }
 
+// 新的钱包余额接口类型
+export interface WalletBalanceData {
+    address: string;
+    solBalance: number;
+    tokenBalances: Array<{
+        symbol: string;
+        name: string;
+        balance: number;
+        price: number;
+        usdValue: number;
+        color: string;
+    }>;
+    totalUsdValue: number;
+    lastUpdated: string;
+}
+
+// 纯余额数据接口类型（不包含价格）
+export interface WalletBalanceOnlyData {
+    address: string;
+    solBalance: number;
+    tokenBalances: Array<{
+        symbol: string;
+        name: string;
+        balance: number;
+        decimals: number;
+        address: string;
+        color: string;
+    }>;
+    lastUpdated: string;
+}
+
 export const api = {
     async getLatestBalance(wallet: string): Promise<BalanceData> {
         const response = await axios.get(`${API_BASE}/balance/latest`, {
+            params: { wallet }
+        });
+        return response.data;
+    },
+
+    async getWalletBalance(wallet: string): Promise<WalletBalanceData> {
+        const response = await axios.get(`${API_BASE}/balance/wallet`, {
+            params: { wallet }
+        });
+        return response.data;
+    },
+
+    async getWalletBalanceOnly(wallet: string): Promise<WalletBalanceOnlyData> {
+        const response = await axios.get(`${API_BASE}/balance/wallet-only`, {
             params: { wallet }
         });
         return response.data;

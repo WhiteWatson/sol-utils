@@ -19,10 +19,8 @@ import {
   StorageService,
   StoredWalletConnection,
 } from "../services/storageService";
-import {
-  solanaService,
-  WalletBalance as SolanaWalletBalance,
-} from "../services/solanaService";
+import { api, WalletBalanceData, WalletBalanceOnlyData } from "../services/api";
+import { config } from "../config";
 
 // 余额数据接口
 export interface BalanceData {
@@ -238,37 +236,90 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     try {
       dispatch({ type: "SET_BALANCE_LOADING", payload: true });
 
-      const solanaBalance = await solanaService.getWalletBalance(walletAddress);
+      let balanceData: BalanceData;
 
-      // 转换为应用内的余额格式
-      const balanceData: BalanceData = {
-        sol: solanaBalance.solBalance,
-        usdc:
-          solanaBalance.tokenBalances.find((t) => t.symbol === "USDC")
-            ?.balance || 0,
-        usdt:
-          solanaBalance.tokenBalances.find((t) => t.symbol === "USDT")
-            ?.balance || 0,
-        solPrice:
-          solanaBalance.tokenBalances.find((t) => t.symbol === "SOL")?.price ||
-          0,
-        usdcPrice:
-          solanaBalance.tokenBalances.find((t) => t.symbol === "USDC")?.price ||
-          0,
-        usdtPrice:
-          solanaBalance.tokenBalances.find((t) => t.symbol === "USDT")?.price ||
-          0,
-        lastUpdated: solanaBalance.lastUpdated,
-        totalUsdValue: solanaBalance.totalUsdValue,
-        tokenBalances: solanaBalance.tokenBalances.map((token) => ({
-          symbol: token.symbol,
-          name: token.name,
-          balance: token.balance,
-          price: token.price || 0,
-          usdValue: token.usdValue || 0,
-          color: token.color,
-        })),
-      };
+      if (config.enablePriceData) {
+        // 使用带价格的API
+        const walletBalanceData = await api.getWalletBalance(walletAddress);
+
+        balanceData = {
+          sol: walletBalanceData.solBalance,
+          usdc:
+            walletBalanceData.tokenBalances.find((t) => t.symbol === "USDC")
+              ?.balance || 0,
+          usdt:
+            walletBalanceData.tokenBalances.find((t) => t.symbol === "USDT")
+              ?.balance || 0,
+          solPrice:
+            walletBalanceData.tokenBalances.find((t) => t.symbol === "SOL")
+              ?.price || 0,
+          usdcPrice:
+            walletBalanceData.tokenBalances.find((t) => t.symbol === "USDC")
+              ?.price || 0,
+          usdtPrice:
+            walletBalanceData.tokenBalances.find((t) => t.symbol === "USDT")
+              ?.price || 0,
+          lastUpdated: walletBalanceData.lastUpdated,
+          totalUsdValue: walletBalanceData.totalUsdValue,
+          tokenBalances: walletBalanceData.tokenBalances.map((token) => ({
+            symbol: token.symbol,
+            name: token.name,
+            balance: token.balance,
+            price: token.price || 0,
+            usdValue: token.usdValue || 0,
+            color: token.color,
+          })),
+        };
+      } else {
+        // 使用纯余额API
+        const walletBalanceOnlyData = await api.getWalletBalanceOnly(
+          walletAddress
+        );
+
+        // 使用默认价格计算USD价值
+        const solPrice = config.defaultPrices.SOL;
+        const usdcPrice = config.defaultPrices.USDC;
+        const usdtPrice = config.defaultPrices.USDT;
+
+        const solBalance = walletBalanceOnlyData.solBalance;
+        const usdcBalance =
+          walletBalanceOnlyData.tokenBalances.find((t) => t.symbol === "USDC")
+            ?.balance || 0;
+        const usdtBalance =
+          walletBalanceOnlyData.tokenBalances.find((t) => t.symbol === "USDT")
+            ?.balance || 0;
+
+        const totalUsdValue =
+          solBalance * solPrice +
+          usdcBalance * usdcPrice +
+          usdtBalance * usdtPrice;
+
+        balanceData = {
+          sol: solBalance,
+          usdc: usdcBalance,
+          usdt: usdtBalance,
+          solPrice,
+          usdcPrice,
+          usdtPrice,
+          lastUpdated: walletBalanceOnlyData.lastUpdated,
+          totalUsdValue,
+          tokenBalances: walletBalanceOnlyData.tokenBalances.map((token) => ({
+            symbol: token.symbol,
+            name: token.name,
+            balance: token.balance,
+            price:
+              config.defaultPrices[
+                token.symbol as keyof typeof config.defaultPrices
+              ] || 0,
+            usdValue:
+              token.balance *
+              (config.defaultPrices[
+                token.symbol as keyof typeof config.defaultPrices
+              ] || 0),
+            color: token.color,
+          })),
+        };
+      }
 
       dispatch({
         type: "UPDATE_BALANCE",
