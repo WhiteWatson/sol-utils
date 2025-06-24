@@ -1,6 +1,6 @@
 import React from "react";
 import { Row, Col, Card, Statistic, Button, Space } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined } from "@ant-design/icons";
 import { useWallet } from "@/contexts/WalletContext";
 import BalanceCard from "@/components/wallet/BalanceCard";
 import BalanceChart from "@/components/wallet/BalanceChart";
@@ -13,11 +13,6 @@ const BalanceOverview: React.FC = () => {
   const handleRefresh = () => {
     // 刷新余额数据
     console.log("刷新余额数据");
-  };
-
-  const handleAddWallet = () => {
-    // 添加钱包
-    console.log("添加钱包");
   };
 
   return (
@@ -34,13 +29,6 @@ const BalanceOverview: React.FC = () => {
             loading={state.loading}
           >
             刷新
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAddWallet}
-          >
-            添加钱包
           </Button>
         </Space>
       </div>

@@ -15,6 +15,7 @@ import BasicLayout from "@/components/layout/BasicLayout";
 import DashboardPage from "@/pages/Dashboard";
 import BalanceOverview from "@/pages/Wallet/BalanceOverview";
 import AlertSettings from "@/pages/Wallet/AlertSettings";
+import WalletManagement from "@/pages/Wallet/WalletManagement";
 import TransactionHistory from "@/pages/Transaction/History";
 import FundFlow from "@/pages/Transaction/FundFlow";
 import SniperConsole from "@/pages/SniperConsole";
@@ -52,6 +53,11 @@ export const routes: RouteItem[] = [
             path: "/wallet/overview",
             name: "余额概览",
             element: <BalanceOverview />,
+          },
+          {
+            path: "/wallet/management",
+            name: "钱包管理",
+            element: <WalletManagement />,
           },
           {
             path: "/wallet/alerts",
